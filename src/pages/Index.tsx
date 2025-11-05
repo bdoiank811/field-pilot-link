@@ -3,6 +3,7 @@ import { DroneCard } from '@/components/DroneCard';
 import { StationCard } from '@/components/StationCard';
 import { AlertsPanel } from '@/components/AlertsPanel';
 import { DashboardStats } from '@/components/DashboardStats';
+import { DroneMap } from '@/components/DroneMap';
 import { mockDrones, mockStations } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plane } from 'lucide-react';
@@ -39,8 +40,9 @@ const Index = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="drones" className="w-full">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+          <TabsList className="grid w-full max-w-2xl grid-cols-4">
             <TabsTrigger value="drones">Drones</TabsTrigger>
+            <TabsTrigger value="map">Map</TabsTrigger>
             <TabsTrigger value="stations">Stations</TabsTrigger>
             <TabsTrigger value="alerts">Alerts</TabsTrigger>
           </TabsList>
@@ -51,6 +53,10 @@ const Index = () => {
                 <DroneCard key={drone.id} drone={drone} />
               ))}
             </div>
+          </TabsContent>
+
+          <TabsContent value="map" className="mt-6">
+            <DroneMap drones={drones} />
           </TabsContent>
 
           <TabsContent value="stations" className="mt-6">
