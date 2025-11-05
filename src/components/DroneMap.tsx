@@ -69,7 +69,13 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
   const markersRef = useRef<L.Marker[]>([]);
 
   useEffect(() => {
-    if (!mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current) return;
+    
+    // Prevent duplicate map initialization
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
 
     // Calculate center point
     const center: [number, number] = drones.length > 0
@@ -80,13 +86,17 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
       : [40.7128, -74.006];
 
     // Initialize map
-    mapRef.current = L.map(mapContainerRef.current).setView(center, 13);
+    try {
+      mapRef.current = L.map(mapContainerRef.current).setView(center, 13);
 
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-    }).addTo(mapRef.current);
+      // Add tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(mapRef.current);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
 
     // Cleanup function
     return () => {
@@ -100,29 +110,30 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Clear existing markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
+    try {
+      // Clear existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
 
-    // Add markers for each drone
-    drones.forEach((drone) => {
-      if (!mapRef.current) return;
+      // Add markers for each drone
+      drones.forEach((drone) => {
+        if (!mapRef.current) return;
 
-      const marker = L.marker([drone.location.lat, drone.location.lng], {
-        icon: createDroneIcon(drone.status)
-      }).addTo(mapRef.current);
+        const marker = L.marker([drone.location.lat, drone.location.lng], {
+          icon: createDroneIcon(drone.status)
+        }).addTo(mapRef.current);
 
-      const statusColors = {
-        active: '#16a34a',
-        charging: '#0891b2',
-        maintenance: '#dc2626',
-        idle: '#6b7280'
-      };
+        const statusColors = {
+          active: '#16a34a',
+          charging: '#0891b2',
+          maintenance: '#dc2626',
+          idle: '#6b7280'
+        };
 
-      const statusColor = statusColors[drone.status as keyof typeof statusColors];
+        const statusColor = statusColors[drone.status as keyof typeof statusColors];
 
-      // Create popup content
-      const popupContent = `
+        // Create popup content
+        const popupContent = `
         <div style="min-width: 250px; font-family: system-ui, -apple-system, sans-serif;">
           <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: #1f2937;">${drone.name}</h3>
           <div style="display: flex; flex-direction: column; gap: 8px;">
@@ -165,18 +176,21 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
             ` : ''}
           </div>
         </div>
-      `;
+        `;
 
-      marker.bindPopup(popupContent);
-      markersRef.current.push(marker);
-    });
+        marker.bindPopup(popupContent);
+        markersRef.current.push(marker);
+      });
 
-    // Fit bounds to show all drones
-    if (drones.length > 0) {
-      const bounds = L.latLngBounds(
-        drones.map(drone => [drone.location.lat, drone.location.lng] as [number, number])
-      );
-      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      // Fit bounds to show all drones
+      if (drones.length > 0) {
+        const bounds = L.latLngBounds(
+          drones.map(drone => [drone.location.lat, drone.location.lng] as [number, number])
+        );
+        mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+      }
+    } catch (error) {
+      console.error('Error updating map markers:', error);
     }
   }, [drones]);
 
