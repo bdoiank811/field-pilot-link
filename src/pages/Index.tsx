@@ -5,7 +5,8 @@ import { AlertsPanel } from '@/components/AlertsPanel';
 import { DashboardStats } from '@/components/DashboardStats';
 import { DroneMap } from '@/components/DroneMap';
 import { FlightHistory } from '@/components/FlightHistory';
-import { mockDrones, mockStations, mockFlightMissions } from '@/data/mockData';
+import { ActivityFeed } from '@/components/ActivityFeed';
+import { mockDrones, mockStations, mockFlightMissions, mockActivityEvents } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plane } from 'lucide-react';
 
@@ -13,6 +14,7 @@ const Index = () => {
   const [drones] = useState(mockDrones);
   const [stations] = useState(mockStations);
   const [missions] = useState(mockFlightMissions);
+  const [activityEvents] = useState(mockActivityEvents);
   const [activeTab, setActiveTab] = useState('drones');
 
   const handleStatClick = (statType: 'active' | 'battery' | 'issues' | 'charging') => {
@@ -54,15 +56,18 @@ const Index = () => {
         {/* Stats Overview */}
         <DashboardStats drones={drones} onStatClick={handleStatClick} />
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full max-w-3xl grid-cols-5">
-            <TabsTrigger value="drones">Drones</TabsTrigger>
-            <TabsTrigger value="map">Map</TabsTrigger>
-            <TabsTrigger value="stations">Stations</TabsTrigger>
-            <TabsTrigger value="alerts">Alerts</TabsTrigger>
-            <TabsTrigger value="history">History</TabsTrigger>
-          </TabsList>
+        {/* Main Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left side - Main content with tabs */}
+          <div className="lg:col-span-2">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-5">
+                <TabsTrigger value="drones">Drones</TabsTrigger>
+                <TabsTrigger value="map">Map</TabsTrigger>
+                <TabsTrigger value="stations">Stations</TabsTrigger>
+                <TabsTrigger value="alerts">Alerts</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
+              </TabsList>
 
           <TabsContent value="drones" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -93,7 +98,14 @@ const Index = () => {
           <TabsContent value="history" className="mt-6">
             <FlightHistory missions={missions} />
           </TabsContent>
-        </Tabs>
+            </Tabs>
+          </div>
+
+          {/* Right side - Activity Feed */}
+          <div className="lg:col-span-1">
+            <ActivityFeed events={activityEvents} />
+          </div>
+        </div>
       </main>
     </div>
   );

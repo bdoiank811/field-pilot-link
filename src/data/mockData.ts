@@ -1,4 +1,4 @@
-import { Drone, ChargingStation, FlightMission } from '@/types/drone';
+import { Drone, ChargingStation, FlightMission, ActivityEvent } from '@/types/drone';
 
 export const mockDrones: Drone[] = [
   {
@@ -272,4 +272,131 @@ export const mockFlightMissions: FlightMission[] = [
     farm: 'Riverside Agricultural',
     status: 'completed'
   }
+];
+
+export const mockActivityEvents: ActivityEvent[] = [
+  {
+    id: 'ACT-001',
+    type: 'mission_complete',
+    timestamp: new Date(Date.now() - 2 * 60 * 1000).toISOString(),
+    message: 'Successfully completed spray mission covering 45 acres',
+    droneId: 'DJI-001',
+    droneName: 'Agras T40-Alpha',
+  },
+  {
+    id: 'ACT-002',
+    type: 'alert',
+    timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
+    message: 'GPS signal loss reported - drone returning to base',
+    droneId: 'DJI-004',
+    droneName: 'Agras T40-Delta',
+    severity: 'high',
+  },
+  {
+    id: 'ACT-003',
+    type: 'status_change',
+    timestamp: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+    message: 'Drone status changed from idle to active - mission started',
+    droneId: 'DJI-003',
+    droneName: 'Agras T40-Gamma',
+  },
+  {
+    id: 'ACT-004',
+    type: 'battery_warning',
+    timestamp: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+    message: 'Battery level below 15% - initiating return to charging station',
+    droneId: 'DJI-004',
+    droneName: 'Agras T40-Delta',
+    severity: 'medium',
+  },
+  {
+    id: 'ACT-005',
+    type: 'station_update',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    message: 'Charging station North Sector Beta now available',
+    stationId: 'Station A-2',
+  },
+  {
+    id: 'ACT-006',
+    type: 'mission_complete',
+    timestamp: new Date(Date.now() - 20 * 60 * 1000).toISOString(),
+    message: 'Field mapping mission completed - data uploaded successfully',
+    droneId: 'DJI-006',
+    droneName: 'Agras T40-Zeta',
+  },
+  {
+    id: 'ACT-007',
+    type: 'maintenance',
+    timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+    message: 'Scheduled maintenance started - estimated completion in 2 hours',
+    droneId: 'DJI-004',
+    droneName: 'Agras T40-Delta',
+    severity: 'low',
+  },
+  {
+    id: 'ACT-008',
+    type: 'alert',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    message: 'Motor overheating detected - immediate service required',
+    droneId: 'DJI-004',
+    droneName: 'Agras T40-Delta',
+    severity: 'critical',
+  },
+  {
+    id: 'ACT-009',
+    type: 'status_change',
+    timestamp: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+    message: 'Drone entered charging mode - battery at 45%',
+    droneId: 'DJI-002',
+    droneName: 'Agras T40-Beta',
+  },
+  {
+    id: 'ACT-010',
+    type: 'mission_complete',
+    timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    message: 'Pest detection survey completed - 12 areas flagged for treatment',
+    droneId: 'DJI-005',
+    droneName: 'Agras T40-Epsilon',
+  },
+  {
+    id: 'ACT-011',
+    type: 'station_update',
+    timestamp: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
+    message: 'East Sector Beta station entered maintenance mode',
+    stationId: 'Station B-2',
+  },
+  {
+    id: 'ACT-012',
+    type: 'battery_warning',
+    timestamp: new Date(Date.now() - 55 * 60 * 1000).toISOString(),
+    message: 'Battery efficiency below optimal threshold - calibration recommended',
+    droneId: 'DJI-006',
+    droneName: 'Agras T40-Zeta',
+    severity: 'medium',
+  },
+  {
+    id: 'ACT-013',
+    type: 'status_change',
+    timestamp: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    message: 'Drone completed charging - battery at 100%',
+    droneId: 'DJI-005',
+    droneName: 'Agras T40-Epsilon',
+  },
+  {
+    id: 'ACT-014',
+    type: 'alert',
+    timestamp: new Date(Date.now() - 70 * 60 * 1000).toISOString(),
+    message: 'Spray nozzle calibration recommended after 50 flight hours',
+    droneId: 'DJI-002',
+    droneName: 'Agras T40-Beta',
+    severity: 'low',
+  },
+  {
+    id: 'ACT-015',
+    type: 'mission_complete',
+    timestamp: new Date(Date.now() - 80 * 60 * 1000).toISOString(),
+    message: 'Early morning irrigation survey completed successfully',
+    droneId: 'DJI-001',
+    droneName: 'Agras T40-Alpha',
+  },
 ];

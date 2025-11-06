@@ -43,3 +43,16 @@ export interface ChargingStation {
   assignedDrone?: string;
   capacity: number;
 }
+
+export type ActivityEventType = 'status_change' | 'alert' | 'mission_complete' | 'station_update' | 'battery_warning' | 'maintenance';
+
+export interface ActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  timestamp: string;
+  message: string;
+  droneId?: string;
+  droneName?: string;
+  stationId?: string;
+  severity?: 'low' | 'medium' | 'high' | 'critical';
+}
