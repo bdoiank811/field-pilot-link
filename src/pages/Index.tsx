@@ -4,13 +4,29 @@ import { StationCard } from '@/components/StationCard';
 import { AlertsPanel } from '@/components/AlertsPanel';
 import { DashboardStats } from '@/components/DashboardStats';
 import { DroneMap } from '@/components/DroneMap';
-import { mockDrones, mockStations } from '@/data/mockData';
+import { FlightHistory } from '@/components/FlightHistory';
+import { mockDrones, mockStations, mockFlightMissions } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plane } from 'lucide-react';
 
 const Index = () => {
   const [drones] = useState(mockDrones);
   const [stations] = useState(mockStations);
+  const [missions] = useState(mockFlightMissions);
+  const [activeTab, setActiveTab] = useState('drones');
+
+  const handleStatClick = (statType: 'active' | 'battery' | 'issues' | 'charging') => {
+    switch (statType) {
+      case 'active':
+      case 'battery':
+      case 'charging':
+        setActiveTab('drones');
+        break;
+      case 'issues':
+        setActiveTab('alerts');
+        break;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -36,15 +52,16 @@ const Index = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 space-y-8">
         {/* Stats Overview */}
-        <DashboardStats drones={drones} />
+        <DashboardStats drones={drones} onStatClick={handleStatClick} />
 
         {/* Tabs */}
-        <Tabs defaultValue="drones" className="w-full">
-          <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-3xl grid-cols-5">
             <TabsTrigger value="drones">Drones</TabsTrigger>
             <TabsTrigger value="map">Map</TabsTrigger>
             <TabsTrigger value="stations">Stations</TabsTrigger>
             <TabsTrigger value="alerts">Alerts</TabsTrigger>
+            <TabsTrigger value="history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="drones" className="mt-6">
@@ -71,6 +88,10 @@ const Index = () => {
             <div className="max-w-4xl mx-auto">
               <AlertsPanel drones={drones} />
             </div>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-6">
+            <FlightHistory missions={missions} />
           </TabsContent>
         </Tabs>
       </main>

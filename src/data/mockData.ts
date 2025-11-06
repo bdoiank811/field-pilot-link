@@ -1,4 +1,4 @@
-import { Drone, ChargingStation } from '@/types/drone';
+import { Drone, ChargingStation, FlightMission } from '@/types/drone';
 
 export const mockDrones: Drone[] = [
   {
@@ -138,5 +138,138 @@ export const mockStations: ChargingStation[] = [
     status: 'charging',
     assignedDrone: 'DJI-006',
     capacity: 2
+  }
+];
+
+export const mockFlightMissions: FlightMission[] = [
+  {
+    id: 'FLT-001',
+    droneId: 'DJI-001',
+    droneName: 'Agras T40-Alpha',
+    startTime: '2025-01-05T08:30:00',
+    endTime: '2025-01-05T10:15:00',
+    duration: 105,
+    batteryStart: 100,
+    batteryEnd: 22,
+    batteryConsumed: 78,
+    farm: 'Greenfield Farms North',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-002',
+    droneId: 'DJI-003',
+    droneName: 'Agras T40-Gamma',
+    startTime: '2025-01-05T07:00:00',
+    endTime: '2025-01-05T08:25:00',
+    duration: 85,
+    batteryStart: 100,
+    batteryEnd: 35,
+    batteryConsumed: 65,
+    farm: 'Summit Valley Organics',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-003',
+    droneId: 'DJI-006',
+    droneName: 'Agras T40-Zeta',
+    startTime: '2025-01-05T06:15:00',
+    endTime: '2025-01-05T08:45:00',
+    duration: 150,
+    batteryStart: 98,
+    batteryEnd: 12,
+    batteryConsumed: 86,
+    farm: 'Prairie Fields Co-op',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-004',
+    droneId: 'DJI-004',
+    droneName: 'Agras T40-Delta',
+    startTime: '2025-01-05T05:30:00',
+    endTime: '2025-01-05T06:10:00',
+    duration: 40,
+    batteryStart: 95,
+    batteryEnd: 55,
+    batteryConsumed: 40,
+    farm: 'Mountain View Ranch',
+    status: 'emergency'
+  },
+  {
+    id: 'FLT-005',
+    droneId: 'DJI-002',
+    droneName: 'Agras T40-Beta',
+    startTime: '2025-01-04T14:00:00',
+    endTime: '2025-01-04T16:30:00',
+    duration: 150,
+    batteryStart: 100,
+    batteryEnd: 8,
+    batteryConsumed: 92,
+    farm: 'Riverside Agricultural',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-006',
+    droneId: 'DJI-005',
+    droneName: 'Agras T40-Epsilon',
+    startTime: '2025-01-04T13:20:00',
+    endTime: '2025-01-04T14:45:00',
+    duration: 85,
+    batteryStart: 100,
+    batteryEnd: 42,
+    batteryConsumed: 58,
+    farm: 'Oakwood Estates',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-007',
+    droneId: 'DJI-001',
+    droneName: 'Agras T40-Alpha',
+    startTime: '2025-01-04T09:00:00',
+    endTime: '2025-01-04T10:15:00',
+    duration: 75,
+    batteryStart: 98,
+    batteryEnd: 38,
+    batteryConsumed: 60,
+    farm: 'Greenfield Farms North',
+    status: 'aborted'
+  },
+  {
+    id: 'FLT-008',
+    droneId: 'DJI-003',
+    droneName: 'Agras T40-Gamma',
+    startTime: '2025-01-04T08:30:00',
+    endTime: '2025-01-04T11:00:00',
+    duration: 150,
+    batteryStart: 100,
+    batteryEnd: 15,
+    batteryConsumed: 85,
+    farm: 'Summit Valley Organics',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-009',
+    droneId: 'DJI-006',
+    droneName: 'Agras T40-Zeta',
+    startTime: '2025-01-03T15:45:00',
+    endTime: '2025-01-03T17:30:00',
+    duration: 105,
+    batteryStart: 100,
+    batteryEnd: 25,
+    batteryConsumed: 75,
+    farm: 'Prairie Fields Co-op',
+    status: 'completed'
+  },
+  {
+    id: 'FLT-010',
+    droneId: 'DJI-002',
+    droneName: 'Agras T40-Beta',
+    startTime: '2025-01-03T10:00:00',
+    endTime: '2025-01-03T12:45:00',
+    duration: 165,
+    batteryStart: 95,
+    batteryEnd: 5,
+    batteryConsumed: 90,
+    farm: 'Riverside Agricultural',
+    status: 'completed'
   }
 ];

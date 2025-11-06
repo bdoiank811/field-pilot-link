@@ -22,6 +22,20 @@ export interface HardwareIssue {
   timestamp: string;
 }
 
+export interface FlightMission {
+  id: string;
+  droneId: string;
+  droneName: string;
+  startTime: string;
+  endTime: string;
+  duration: number; // in minutes
+  batteryStart: number;
+  batteryEnd: number;
+  batteryConsumed: number;
+  farm: string;
+  status: 'completed' | 'aborted' | 'emergency';
+}
+
 export interface ChargingStation {
   id: string;
   name: string;

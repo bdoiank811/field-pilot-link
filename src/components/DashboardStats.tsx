@@ -4,9 +4,10 @@ import { Drone } from '@/types/drone';
 
 interface DashboardStatsProps {
   drones: Drone[];
+  onStatClick?: (statType: 'active' | 'battery' | 'issues' | 'charging') => void;
 }
 
-export const DashboardStats = ({ drones }: DashboardStatsProps) => {
+export const DashboardStats = ({ drones, onStatClick }: DashboardStatsProps) => {
   const activeDrones = drones.filter(d => d.status === 'active').length;
   const avgBattery = Math.round(drones.reduce((sum, d) => sum + d.battery, 0) / drones.length);
   const totalIssues = drones.reduce((sum, d) => sum + d.issues.length, 0);
@@ -17,25 +18,29 @@ export const DashboardStats = ({ drones }: DashboardStatsProps) => {
       label: 'Active Drones',
       value: activeDrones,
       icon: Activity,
-      color: 'text-success'
+      color: 'text-success',
+      type: 'active' as const
     },
     {
       label: 'Avg Battery',
       value: `${avgBattery}%`,
       icon: Battery,
-      color: 'text-secondary'
+      color: 'text-secondary',
+      type: 'battery' as const
     },
     {
       label: 'Active Issues',
       value: totalIssues,
       icon: AlertTriangle,
-      color: totalIssues > 0 ? 'text-warning' : 'text-muted-foreground'
+      color: totalIssues > 0 ? 'text-warning' : 'text-muted-foreground',
+      type: 'issues' as const
     },
     {
       label: 'Charging',
       value: chargingDrones,
       icon: Plug,
-      color: 'text-secondary'
+      color: 'text-secondary',
+      type: 'charging' as const
     }
   ];
 
@@ -44,7 +49,11 @@ export const DashboardStats = ({ drones }: DashboardStatsProps) => {
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.label} className="border-border">
+          <Card 
+            key={stat.label} 
+            className="border-border cursor-pointer transition-all hover:shadow-lg hover:scale-105"
+            onClick={() => onStatClick?.(stat.type)}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
