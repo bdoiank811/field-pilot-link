@@ -17,12 +17,12 @@ L.Icon.Default.mergeOptions({
 interface DroneMapProps {
   drones: Drone[];
   flightPaths?: Record<string, Array<[number, number]>>;
-  selectedDroneId?: string | null;
+  selectedDroneIds?: string[];
   onDroneClick?: (droneId: string) => void;
 }
 
 // Custom icons for different drone statuses
-const createDroneIcon = (status: string) => {
+const createDroneIcon = (status: string, isTracked: boolean = false) => {
   const colors = {
     active: '#16a34a',
     charging: '#0891b2',
@@ -31,18 +31,22 @@ const createDroneIcon = (status: string) => {
   };
 
   const color = colors[status as keyof typeof colors] || colors.idle;
+  const size = isTracked ? 44 : 32;
+  const iconFontSize = isTracked ? 22 : 16;
+  const borderWidth = isTracked ? 4 : 3;
 
   return L.divIcon({
     className: 'custom-drone-marker',
     html: `
       <div style="
         background-color: ${color};
-        width: 32px;
-        height: 32px;
+        width: ${size}px;
+        height: ${size}px;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
-        border: 3px solid white;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        border: ${borderWidth}px solid white;
+        box-shadow: 0 ${isTracked ? 4 : 2}px ${isTracked ? 12 : 8}px rgba(0,0,0,${isTracked ? 0.4 : 0.3});
+        ${isTracked ? 'animation: pulse 2s infinite;' : ''}
       ">
         <div style="
           position: absolute;
@@ -50,13 +54,20 @@ const createDroneIcon = (status: string) => {
           left: 50%;
           transform: translate(-50%, -50%) rotate(45deg);
           color: white;
-          font-size: 16px;
+          font-size: ${iconFontSize}px;
+          font-weight: ${isTracked ? 'bold' : 'normal'};
         ">✈</div>
       </div>
+      ${isTracked ? `<style>
+        @keyframes pulse {
+          0%, 100% { transform: rotate(-45deg) scale(1); }
+          50% { transform: rotate(-45deg) scale(1.1); }
+        }
+      </style>` : ''}
     `,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -size],
   });
 };
 
@@ -66,7 +77,7 @@ const getBatteryColor = (level: number) => {
   return '#dc2626';
 };
 
-export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onDroneClick }: DroneMapProps) => {
+export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDroneClick }: DroneMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
@@ -125,8 +136,9 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onD
       drones.forEach((drone) => {
         if (!mapRef.current) return;
 
+        const isTracked = selectedDroneIds.includes(drone.id);
         const marker = L.marker([drone.location.lat, drone.location.lng], {
-          icon: createDroneIcon(drone.status)
+          icon: createDroneIcon(drone.status, isTracked)
         }).addTo(mapRef.current);
 
         const statusColors = {
@@ -195,7 +207,7 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onD
                   cursor: pointer;
                 "
               >
-                ${selectedDroneId === drone.id ? 'Hide' : 'Show'} Flight Path
+                ${isTracked ? 'Untrack' : 'Track'} Flight Path
               </button>
             </div>
           </div>
@@ -214,27 +226,29 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onD
         markersRef.current.push(marker);
       });
 
-      // Draw flight path for selected drone
-      if (selectedDroneId && flightPaths[selectedDroneId] && flightPaths[selectedDroneId].length > 1) {
-        const path = flightPaths[selectedDroneId];
-        const drone = drones.find(d => d.id === selectedDroneId);
-        const statusColors = {
-          active: '#16a34a',
-          charging: '#0891b2',
-          maintenance: '#dc2626',
-          idle: '#6b7280'
-        };
-        const color = drone ? statusColors[drone.status as keyof typeof statusColors] : '#6b7280';
-        
-        const polyline = L.polyline(path, {
-          color: color,
-          weight: 3,
-          opacity: 0.7,
-          dashArray: '5, 10',
-        }).addTo(mapRef.current);
-        
-        polylinesRef.current.push(polyline);
-      }
+      // Draw flight paths for all selected drones
+      selectedDroneIds.forEach(droneId => {
+        if (flightPaths[droneId] && flightPaths[droneId].length > 1 && mapRef.current) {
+          const path = flightPaths[droneId];
+          const drone = drones.find(d => d.id === droneId);
+          const statusColors = {
+            active: '#16a34a',
+            charging: '#0891b2',
+            maintenance: '#dc2626',
+            idle: '#6b7280'
+          };
+          const color = drone ? statusColors[drone.status as keyof typeof statusColors] : '#6b7280';
+          
+          const polyline = L.polyline(path, {
+            color: color,
+            weight: 3,
+            opacity: 0.7,
+            dashArray: '5, 10',
+          }).addTo(mapRef.current);
+          
+          polylinesRef.current.push(polyline);
+        }
+      });
 
       // Fit bounds to show all drones
       if (drones.length > 0) {
@@ -246,7 +260,7 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onD
     } catch (error) {
       console.error('Error updating map markers:', error);
     }
-  }, [drones, flightPaths, selectedDroneId, onDroneClick]);
+  }, [drones, flightPaths, selectedDroneIds, onDroneClick]);
 
   // Set up global click handler for popup buttons
   useEffect(() => {

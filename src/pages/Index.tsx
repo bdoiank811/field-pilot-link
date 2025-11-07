@@ -20,7 +20,7 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState('drones');
   const [isSimulating, setIsSimulating] = useState(false);
   const [flightPaths, setFlightPaths] = useState<Record<string, Array<[number, number]>>>({});
-  const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null);
+  const [selectedDroneIds, setSelectedDroneIds] = useState<string[]>([]);
   const [dronePatterns, setDronePatterns] = useState<Record<string, { corners: Array<[number, number]>, currentCorner: number }>>();
 
   // Initialize square flight patterns for each drone
@@ -98,16 +98,16 @@ const Index = () => {
         })
       );
 
-      // Update flight paths
+      // Update flight paths only for tracked drones
       setFlightPaths(prevPaths => {
         const newPaths = { ...prevPaths };
         drones.forEach(drone => {
-          if (drone.status === 'active') {
+          if (drone.status === 'active' && selectedDroneIds.includes(drone.id)) {
             const path = newPaths[drone.id] || [];
             newPaths[drone.id] = [...path, [drone.location.lat, drone.location.lng]];
-            // Keep only last 100 positions
-            if (newPaths[drone.id].length > 100) {
-              newPaths[drone.id] = newPaths[drone.id].slice(-100);
+            // Keep only last 200 positions
+            if (newPaths[drone.id].length > 200) {
+              newPaths[drone.id] = newPaths[drone.id].slice(-200);
             }
           }
         });
@@ -116,7 +116,7 @@ const Index = () => {
     }, 1000); // Update every second
 
     return () => clearInterval(interval);
-  }, [isSimulating, drones, dronePatterns]);
+  }, [isSimulating, drones, dronePatterns, selectedDroneIds]);
 
   const handleStatClick = (statType: 'active' | 'battery' | 'issues' | 'charging') => {
     switch (statType) {
@@ -135,15 +135,27 @@ const Index = () => {
     if (isSimulating) {
       // Reset to original positions when stopping
       setDrones(mockDrones);
-      setFlightPaths({});
       setDronePatterns(undefined);
-      setSelectedDroneId(null);
+      // Keep flight paths visible
     }
     setIsSimulating(!isSimulating);
   };
 
   const handleDroneClick = (droneId: string) => {
-    setSelectedDroneId(selectedDroneId === droneId ? null : droneId);
+    setSelectedDroneIds(prev => {
+      if (prev.includes(droneId)) {
+        // Untrack: remove from array and clear its flight path
+        setFlightPaths(prevPaths => {
+          const newPaths = { ...prevPaths };
+          delete newPaths[droneId];
+          return newPaths;
+        });
+        return prev.filter(id => id !== droneId);
+      } else {
+        // Track: add to array
+        return [...prev, droneId];
+      }
+    });
   };
 
   return (
@@ -216,7 +228,7 @@ const Index = () => {
             <DroneMap 
               drones={drones} 
               flightPaths={flightPaths}
-              selectedDroneId={selectedDroneId}
+              selectedDroneIds={selectedDroneIds}
               onDroneClick={handleDroneClick}
             />
           </TabsContent>
