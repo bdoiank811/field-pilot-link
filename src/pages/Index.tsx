@@ -19,36 +19,104 @@ const Index = () => {
   const [activityEvents] = useState(mockActivityEvents);
   const [activeTab, setActiveTab] = useState('drones');
   const [isSimulating, setIsSimulating] = useState(false);
+  const [flightPaths, setFlightPaths] = useState<Record<string, Array<[number, number]>>>({});
+  const [selectedDroneId, setSelectedDroneId] = useState<string | null>(null);
+  const [dronePatterns, setDronePatterns] = useState<Record<string, { corners: Array<[number, number]>, currentCorner: number }>>();
 
-  // Drone tracking simulation
+  // Initialize square flight patterns for each drone
   useEffect(() => {
-    if (!isSimulating) return;
+    if (!isSimulating || dronePatterns) return;
+
+    const patterns: Record<string, { corners: Array<[number, number]>, currentCorner: number }> = {};
+    
+    drones.forEach(drone => {
+      if (drone.status === 'active') {
+        // Create a square pattern around the starting position
+        const size = 0.004; // Size of the square (~400m per side)
+        const { lat, lng } = drone.location;
+        
+        patterns[drone.id] = {
+          corners: [
+            [lat, lng],
+            [lat + size, lng],
+            [lat + size, lng + size],
+            [lat, lng + size],
+            [lat, lng] // Return to start
+          ],
+          currentCorner: 0
+        };
+      }
+    });
+    
+    setDronePatterns(patterns);
+  }, [isSimulating, drones]);
+
+  // Drone tracking simulation with square pattern
+  useEffect(() => {
+    if (!isSimulating || !dronePatterns) return;
 
     const interval = setInterval(() => {
       setDrones(prevDrones => 
         prevDrones.map(drone => {
           // Only move active drones
-          if (drone.status !== 'active') return drone;
+          if (drone.status !== 'active' || !dronePatterns[drone.id]) return drone;
 
-          // Generate small random movement
-          const latChange = (Math.random() - 0.5) * 0.002; // ~200m
-          const lngChange = (Math.random() - 0.5) * 0.002;
+          const pattern = dronePatterns[drone.id];
+          const currentCorner = pattern.corners[pattern.currentCorner];
+          const nextCorner = pattern.corners[(pattern.currentCorner + 1) % pattern.corners.length];
+
+          // Calculate direction to next corner
+          const latDiff = nextCorner[0] - drone.location.lat;
+          const lngDiff = nextCorner[1] - drone.location.lng;
+          const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff);
+
+          // Move towards next corner
+          const step = 0.0002; // Step size per update
+          let newLat = drone.location.lat;
+          let newLng = drone.location.lng;
+
+          if (distance < step) {
+            // Reached corner, move to next one
+            newLat = nextCorner[0];
+            newLng = nextCorner[1];
+            pattern.currentCorner = (pattern.currentCorner + 1) % pattern.corners.length;
+          } else {
+            // Move towards corner
+            newLat += (latDiff / distance) * step;
+            newLng += (lngDiff / distance) * step;
+          }
 
           return {
             ...drone,
             location: {
-              lat: drone.location.lat + latChange,
-              lng: drone.location.lng + lngChange,
+              lat: newLat,
+              lng: newLng,
             },
             // Gradually decrease battery for active drones
-            battery: Math.max(0, drone.battery - 0.1),
+            battery: Math.max(0, drone.battery - 0.05),
           };
         })
       );
-    }, 2000); // Update every 2 seconds
+
+      // Update flight paths
+      setFlightPaths(prevPaths => {
+        const newPaths = { ...prevPaths };
+        drones.forEach(drone => {
+          if (drone.status === 'active') {
+            const path = newPaths[drone.id] || [];
+            newPaths[drone.id] = [...path, [drone.location.lat, drone.location.lng]];
+            // Keep only last 100 positions
+            if (newPaths[drone.id].length > 100) {
+              newPaths[drone.id] = newPaths[drone.id].slice(-100);
+            }
+          }
+        });
+        return newPaths;
+      });
+    }, 1000); // Update every second
 
     return () => clearInterval(interval);
-  }, [isSimulating]);
+  }, [isSimulating, drones, dronePatterns]);
 
   const handleStatClick = (statType: 'active' | 'battery' | 'issues' | 'charging') => {
     switch (statType) {
@@ -67,8 +135,15 @@ const Index = () => {
     if (isSimulating) {
       // Reset to original positions when stopping
       setDrones(mockDrones);
+      setFlightPaths({});
+      setDronePatterns(undefined);
+      setSelectedDroneId(null);
     }
     setIsSimulating(!isSimulating);
+  };
+
+  const handleDroneClick = (droneId: string) => {
+    setSelectedDroneId(selectedDroneId === droneId ? null : droneId);
   };
 
   return (
@@ -103,7 +178,7 @@ const Index = () => {
               ) : (
                 <>
                   <Play className="h-4 w-4" />
-                  Start Tracking Simulation
+                  Start Tracking
                 </>
               )}
             </Button>
@@ -138,7 +213,12 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="map" className="mt-6">
-            <DroneMap drones={drones} />
+            <DroneMap 
+              drones={drones} 
+              flightPaths={flightPaths}
+              selectedDroneId={selectedDroneId}
+              onDroneClick={handleDroneClick}
+            />
           </TabsContent>
 
           <TabsContent value="stations" className="mt-6">

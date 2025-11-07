@@ -16,6 +16,9 @@ L.Icon.Default.mergeOptions({
 
 interface DroneMapProps {
   drones: Drone[];
+  flightPaths?: Record<string, Array<[number, number]>>;
+  selectedDroneId?: string | null;
+  onDroneClick?: (droneId: string) => void;
 }
 
 // Custom icons for different drone statuses
@@ -63,10 +66,11 @@ const getBatteryColor = (level: number) => {
   return '#dc2626';
 };
 
-export const DroneMap = ({ drones }: DroneMapProps) => {
+export const DroneMap = ({ drones, flightPaths = {}, selectedDroneId = null, onDroneClick }: DroneMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const polylinesRef = useRef<L.Polyline[]>([]);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -77,13 +81,13 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
       mapRef.current = null;
     }
 
-    // Calculate center point
+    // Calculate center point - default to rural Armenia
     const center: [number, number] = drones.length > 0
       ? [
           drones.reduce((sum, d) => sum + d.location.lat, 0) / drones.length,
           drones.reduce((sum, d) => sum + d.location.lng, 0) / drones.length
         ]
-      : [40.7128, -74.006];
+      : [40.0691, 45.0382];
 
     // Initialize map
     try {
@@ -111,9 +115,11 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
     if (!mapRef.current) return;
 
     try {
-      // Clear existing markers
+      // Clear existing markers and polylines
       markersRef.current.forEach(marker => marker.remove());
       markersRef.current = [];
+      polylinesRef.current.forEach(polyline => polyline.remove());
+      polylinesRef.current = [];
 
       // Add markers for each drone
       drones.forEach((drone) => {
@@ -174,13 +180,61 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
                 </p>
               </div>
             ` : ''}
+            <div style="padding-top: 8px; border-top: 1px solid #e5e7eb;">
+              <button 
+                onclick="window.droneClickHandler('${drone.id}')"
+                style="
+                  width: 100%;
+                  padding: 8px 16px;
+                  background-color: ${statusColor};
+                  color: white;
+                  border: none;
+                  border-radius: 6px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  cursor: pointer;
+                "
+              >
+                ${selectedDroneId === drone.id ? 'Hide' : 'Show'} Flight Path
+              </button>
+            </div>
           </div>
         </div>
         `;
 
         marker.bindPopup(popupContent);
+        
+        // Add click handler for the marker itself
+        marker.on('click', () => {
+          if (onDroneClick) {
+            onDroneClick(drone.id);
+          }
+        });
+        
         markersRef.current.push(marker);
       });
+
+      // Draw flight path for selected drone
+      if (selectedDroneId && flightPaths[selectedDroneId] && flightPaths[selectedDroneId].length > 1) {
+        const path = flightPaths[selectedDroneId];
+        const drone = drones.find(d => d.id === selectedDroneId);
+        const statusColors = {
+          active: '#16a34a',
+          charging: '#0891b2',
+          maintenance: '#dc2626',
+          idle: '#6b7280'
+        };
+        const color = drone ? statusColors[drone.status as keyof typeof statusColors] : '#6b7280';
+        
+        const polyline = L.polyline(path, {
+          color: color,
+          weight: 3,
+          opacity: 0.7,
+          dashArray: '5, 10',
+        }).addTo(mapRef.current);
+        
+        polylinesRef.current.push(polyline);
+      }
 
       // Fit bounds to show all drones
       if (drones.length > 0) {
@@ -192,7 +246,20 @@ export const DroneMap = ({ drones }: DroneMapProps) => {
     } catch (error) {
       console.error('Error updating map markers:', error);
     }
-  }, [drones]);
+  }, [drones, flightPaths, selectedDroneId, onDroneClick]);
+
+  // Set up global click handler for popup buttons
+  useEffect(() => {
+    (window as any).droneClickHandler = (droneId: string) => {
+      if (onDroneClick) {
+        onDroneClick(droneId);
+      }
+    };
+    
+    return () => {
+      delete (window as any).droneClickHandler;
+    };
+  }, [onDroneClick]);
 
   return (
     <Card className="border-border overflow-hidden">
