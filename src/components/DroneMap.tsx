@@ -77,6 +77,41 @@ const getBatteryColor = (level: number) => {
   return '#dc2626';
 };
 
+// Calculate distance between two coordinates using Haversine formula (in km)
+const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
+// Calculate flight statistics
+const calculateFlightStats = (path: Array<[number, number]>) => {
+  if (path.length < 2) {
+    return { distance: 0, flightTime: 0, avgSpeed: 0 };
+  }
+
+  let totalDistance = 0;
+  for (let i = 1; i < path.length; i++) {
+    totalDistance += calculateDistance(path[i-1][0], path[i-1][1], path[i][0], path[i][1]);
+  }
+
+  // Assuming 2 second intervals between points
+  const flightTime = (path.length - 1) * 2 / 60; // in minutes
+  const avgSpeed = flightTime > 0 ? (totalDistance / flightTime) * 60 : 0; // km/h
+
+  return {
+    distance: totalDistance,
+    flightTime: flightTime,
+    avgSpeed: avgSpeed
+  };
+};
+
 export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDroneClick }: DroneMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -150,6 +185,11 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
 
         const statusColor = statusColors[drone.status as keyof typeof statusColors];
 
+        // Calculate flight statistics if tracked
+        const flightStats = isTracked && flightPaths[drone.id]
+          ? calculateFlightStats(flightPaths[drone.id])
+          : null;
+
         // Create popup content
         const popupContent = `
         <div style="min-width: 250px; font-family: system-ui, -apple-system, sans-serif;">
@@ -190,6 +230,27 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
                 <p style="font-size: 14px; font-weight: 600; color: #dc2626;">
                   ⚠️ ${drone.issues.length} Hardware Issue${drone.issues.length > 1 ? 's' : ''}
                 </p>
+              </div>
+            ` : ''}
+            ${flightStats ? `
+              <div style="padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                <p style="font-size: 14px; font-weight: 600; color: #1f2937; margin-bottom: 8px;">
+                  📊 Flight Statistics
+                </p>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 13px; color: #6b7280;">Distance:</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #1f2937;">${flightStats.distance.toFixed(2)} km</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 13px; color: #6b7280;">Flight Time:</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #1f2937;">${flightStats.flightTime.toFixed(1)} min</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 13px; color: #6b7280;">Avg Speed:</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #1f2937;">${flightStats.avgSpeed.toFixed(1)} km/h</span>
+                  </div>
+                </div>
               </div>
             ` : ''}
             <div style="padding-top: 8px; border-top: 1px solid #e5e7eb;">
