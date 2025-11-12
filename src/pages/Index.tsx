@@ -6,6 +6,7 @@ import { DashboardStats } from '@/components/DashboardStats';
 import { DroneMap } from '@/components/DroneMap';
 import { FlightHistory } from '@/components/FlightHistory';
 import { ActivityFeed } from '@/components/ActivityFeed';
+import { FlightStatisticsPanel } from '@/components/FlightStatisticsPanel';
 import { mockDrones, mockStations, mockFlightMissions, mockActivityEvents } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -225,12 +226,19 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="map" className="mt-6">
-            <DroneMap 
-              drones={drones} 
-              flightPaths={flightPaths}
-              selectedDroneIds={selectedDroneIds}
-              onDroneClick={handleDroneClick}
-            />
+            <div className="space-y-6">
+              <DroneMap 
+                drones={drones} 
+                flightPaths={flightPaths}
+                selectedDroneIds={selectedDroneIds}
+                onDroneClick={handleDroneClick}
+              />
+              <FlightStatisticsPanel 
+                drones={drones}
+                flightPaths={flightPaths}
+                selectedDroneIds={selectedDroneIds}
+              />
+            </div>
           </TabsContent>
 
           <TabsContent value="stations" className="mt-6">
