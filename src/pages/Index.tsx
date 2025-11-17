@@ -168,15 +168,15 @@ const Index = () => {
           <div className="flex items-center justify-between">
             {/* Logo on the left */}
             <div className="flex-shrink-0">
-              <img src={aerolinkLogo} alt="AeroLink Technologies" className="h-12 w-auto" />
+              <img src={aerolinkLogo} alt="AeroLink Technologies" className="h-16 w-auto" />
             </div>
             
             {/* Centered title and subtitle */}
             <div className="flex-1 text-center">
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-2xl font-bold text-primary">
                 SmartFarm Drone Fleet Manager
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-primary/80">
                 Field Engineer Dashboard - Real-time monitoring and control
               </p>
             </div>
