@@ -10,8 +10,9 @@ import { FlightStatisticsPanel } from '@/components/FlightStatisticsPanel';
 import { mockDrones, mockStations, mockFlightMissions, mockActivityEvents } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plane, Play, Pause } from 'lucide-react';
+import { Play, Pause } from 'lucide-react';
 import { Drone } from '@/types/drone';
+import aerolinkLogo from '@/assets/aerolink-logo.jpeg';
 
 const Index = () => {
   const [drones, setDrones] = useState(mockDrones);
@@ -165,36 +166,41 @@ const Index = () => {
       <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary rounded-lg">
-                <Plane className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-foreground">
-                  SmartFarm Drone Fleet Manager
-                </h1>
-                <p className="text-sm text-muted-foreground">
-                  Field Engineer Dashboard - Real-time monitoring and control
-                </p>
-              </div>
+            {/* Logo on the left */}
+            <div className="flex-shrink-0">
+              <img src={aerolinkLogo} alt="AeroLink Technologies" className="h-12 w-auto" />
             </div>
-            <Button
-              onClick={toggleSimulation}
-              variant={isSimulating ? "destructive" : "default"}
-              className="gap-2"
-            >
-              {isSimulating ? (
-                <>
-                  <Pause className="h-4 w-4" />
-                  Stop Simulation
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  Start Tracking
-                </>
-              )}
-            </Button>
+            
+            {/* Centered title and subtitle */}
+            <div className="flex-1 text-center">
+              <h1 className="text-2xl font-bold text-foreground">
+                SmartFarm Drone Fleet Manager
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Field Engineer Dashboard - Real-time monitoring and control
+              </p>
+            </div>
+            
+            {/* Simulation button on the right */}
+            <div className="flex-shrink-0">
+              <Button
+                onClick={toggleSimulation}
+                variant={isSimulating ? "destructive" : "default"}
+                className="gap-2"
+              >
+                {isSimulating ? (
+                  <>
+                    <Pause className="h-4 w-4" />
+                    Stop Simulation
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4" />
+                    Start Tracking
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
