@@ -7,7 +7,7 @@ import { DroneMap } from '@/components/DroneMap';
 import { FlightHistory } from '@/components/FlightHistory';
 import { ActivityFeed } from '@/components/ActivityFeed';
 import { FlightStatisticsPanel } from '@/components/FlightStatisticsPanel';
-import { mockDrones, mockStations, mockFlightMissions, mockActivityEvents } from '@/data/mockData';
+import { mockDrones, mockStations, mockFlightMissions, mockActivityEvents, stationColors } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Play, Pause } from 'lucide-react';
@@ -15,7 +15,23 @@ import { Drone } from '@/types/drone';
 import aerolinkLogo from '@/assets/aerolink-logo.jpeg';
 
 const Index = () => {
-  const [drones, setDrones] = useState(mockDrones);
+  // Initialize drones with randomized positions for active drones, station positions for others
+  const [drones, setDrones] = useState(() => {
+    return mockDrones.map(drone => {
+      if (drone.status === 'active' && drone.issues.length === 0) {
+        // Randomize position for active drones without issues
+        const baseLat = 40.0691;
+        const baseLng = 45.0382;
+        const randomLat = baseLat + (Math.random() - 0.5) * 0.08;
+        const randomLng = baseLng + (Math.random() - 0.5) * 0.08;
+        return {
+          ...drone,
+          location: { lat: randomLat, lng: randomLng }
+        };
+      }
+      return drone;
+    });
+  });
   const [stations] = useState(mockStations);
   const [missions] = useState(mockFlightMissions);
   const [activityEvents] = useState(mockActivityEvents);
@@ -245,7 +261,9 @@ const Index = () => {
           <TabsContent value="map" className="mt-6">
             <div className="space-y-6">
               <DroneMap 
-                drones={drones} 
+                drones={drones}
+                stations={stations}
+                stationColors={stationColors}
                 flightPaths={flightPaths}
                 selectedDroneIds={selectedDroneIds}
                 onDroneClick={handleDroneClick}
