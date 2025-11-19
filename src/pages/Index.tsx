@@ -24,6 +24,7 @@ const Index = () => {
   const [flightPaths, setFlightPaths] = useState<Record<string, Array<[number, number]>>>({});
   const [selectedDroneIds, setSelectedDroneIds] = useState<string[]>([]);
   const [dronePatterns, setDronePatterns] = useState<Record<string, { corners: Array<[number, number]>, currentCorner: number }>>();
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
 
   // Initialize square flight patterns for each drone
   useEffect(() => {
@@ -32,7 +33,7 @@ const Index = () => {
     const patterns: Record<string, { corners: Array<[number, number]>, currentCorner: number }> = {};
     
     drones.forEach(drone => {
-      if (drone.status === 'active') {
+      if (drone.status === 'active' && drone.issues.length === 0) {
         // Create a square pattern around the starting position
         const size = 0.004; // Size of the square (~400m per side)
         const { lat, lng } = drone.location;
@@ -60,8 +61,8 @@ const Index = () => {
     const interval = setInterval(() => {
       setDrones(prevDrones => 
         prevDrones.map(drone => {
-          // Only move active drones
-          if (drone.status !== 'active' || !dronePatterns[drone.id]) return drone;
+          // Only move active drones with no issues
+          if (drone.status !== 'active' || drone.issues.length > 0 || !dronePatterns[drone.id]) return drone;
 
           const pattern = dronePatterns[drone.id];
           const currentCorner = pattern.corners[pattern.currentCorner];
@@ -123,12 +124,20 @@ const Index = () => {
   const handleStatClick = (statType: 'active' | 'battery' | 'issues' | 'charging') => {
     switch (statType) {
       case 'active':
+        setActiveTab('drones');
+        setStatusFilter('active');
+        break;
       case 'battery':
+        setActiveTab('drones');
+        setStatusFilter(null);
+        break;
       case 'charging':
         setActiveTab('drones');
+        setStatusFilter('charging');
         break;
       case 'issues':
         setActiveTab('alerts');
+        setStatusFilter(null);
         break;
     }
   };
@@ -225,9 +234,11 @@ const Index = () => {
 
           <TabsContent value="drones" className="mt-6">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {drones.map((drone) => (
-                <DroneCard key={drone.id} drone={drone} />
-              ))}
+              {drones
+                .filter(drone => statusFilter ? drone.status === statusFilter : true)
+                .map((drone) => (
+                  <DroneCard key={drone.id} drone={drone} />
+                ))}
             </div>
           </TabsContent>
 
