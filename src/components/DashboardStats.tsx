@@ -9,7 +9,6 @@ interface DashboardStatsProps {
 
 export const DashboardStats = ({ drones, onStatClick }: DashboardStatsProps) => {
   const activeDrones = drones.filter(d => d.status === 'active').length;
-  const avgBattery = Math.round(drones.reduce((sum, d) => sum + d.battery, 0) / drones.length);
   const totalIssues = drones.reduce((sum, d) => sum + d.issues.length, 0);
   const chargingDrones = drones.filter(d => d.status === 'charging').length;
 
@@ -20,13 +19,6 @@ export const DashboardStats = ({ drones, onStatClick }: DashboardStatsProps) => 
       icon: Activity,
       color: 'text-success',
       type: 'active' as const
-    },
-    {
-      label: 'Avg Battery',
-      value: `${avgBattery}%`,
-      icon: Battery,
-      color: 'text-secondary',
-      type: 'battery' as const
     },
     {
       label: 'Active Issues',
@@ -45,7 +37,7 @@ export const DashboardStats = ({ drones, onStatClick }: DashboardStatsProps) => 
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {stats.map((stat) => {
         const Icon = stat.icon;
         return (
