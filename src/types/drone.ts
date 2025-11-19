@@ -42,6 +42,10 @@ export interface ChargingStation {
   status: 'available' | 'charging' | 'maintenance';
   assignedDrone?: string;
   capacity: number;
+  location: {
+    lat: number;
+    lng: number;
+  };
 }
 
 export type ActivityEventType = 'status_change' | 'alert' | 'mission_complete' | 'station_update' | 'battery_warning' | 'maintenance';

@@ -1,5 +1,15 @@
 import { Drone, ChargingStation, FlightMission, ActivityEvent } from '@/types/drone';
 
+// Station color mapping for visual identification
+export const stationColors: Record<string, string> = {
+  'Station A-1': '#3b82f6', // blue
+  'Station A-2': '#8b5cf6', // purple
+  'Station B-1': '#10b981', // green
+  'Station B-2': '#f59e0b', // amber
+  'Station C-1': '#ec4899', // pink
+  'Station C-2': '#14b8a6', // teal
+};
+
 export const mockDrones: Drone[] = [
   {
     id: 'DJI-001',
@@ -17,7 +27,7 @@ export const mockDrones: Drone[] = [
     name: 'Agras T40-Beta',
     status: 'charging',
     battery: 45,
-    location: { lat: 40.0791, lng: 45.0482 },
+    location: { lat: 40.0650, lng: 45.0350 },
     farm: 'Riverside Agricultural',
     station: 'Station A-2',
     lastActivity: '15 minutes ago',
@@ -46,7 +56,7 @@ export const mockDrones: Drone[] = [
     name: 'Agras T40-Delta',
     status: 'maintenance',
     battery: 12,
-    location: { lat: 40.0991, lng: 45.0682 },
+    location: { lat: 40.0950, lng: 45.0650 },
     farm: 'Mountain View Ranch',
     station: 'Station B-2',
     lastActivity: '2 hours ago',
@@ -70,7 +80,7 @@ export const mockDrones: Drone[] = [
     name: 'Agras T40-Epsilon',
     status: 'idle',
     battery: 100,
-    location: { lat: 40.1091, lng: 45.0782 },
+    location: { lat: 40.1050, lng: 45.0750 },
     farm: 'Oakwood Estates',
     station: 'Station C-1',
     lastActivity: '45 minutes ago',
@@ -102,42 +112,48 @@ export const mockStations: ChargingStation[] = [
     name: 'North Sector Alpha',
     status: 'charging',
     assignedDrone: 'DJI-001',
-    capacity: 2
+    capacity: 2,
+    location: { lat: 40.0650, lng: 45.0350 }
   },
   {
     id: 'Station A-2',
     name: 'North Sector Beta',
     status: 'charging',
     assignedDrone: 'DJI-002',
-    capacity: 2
+    capacity: 2,
+    location: { lat: 40.0750, lng: 45.0450 }
   },
   {
     id: 'Station B-1',
     name: 'East Sector Alpha',
     status: 'available',
     assignedDrone: 'DJI-003',
-    capacity: 3
+    capacity: 3,
+    location: { lat: 40.0850, lng: 45.0550 }
   },
   {
     id: 'Station B-2',
     name: 'East Sector Beta',
     status: 'maintenance',
     assignedDrone: 'DJI-004',
-    capacity: 3
+    capacity: 3,
+    location: { lat: 40.0950, lng: 45.0650 }
   },
   {
     id: 'Station C-1',
     name: 'South Sector Alpha',
     status: 'available',
     assignedDrone: 'DJI-005',
-    capacity: 2
+    capacity: 2,
+    location: { lat: 40.1050, lng: 45.0750 }
   },
   {
     id: 'Station C-2',
     name: 'South Sector Beta',
     status: 'charging',
     assignedDrone: 'DJI-006',
-    capacity: 2
+    capacity: 2,
+    location: { lat: 40.1150, lng: 45.0850 }
   }
 ];
 
