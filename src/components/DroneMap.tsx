@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Drone } from '@/types/drone';
+import { Drone, ChargingStation } from '@/types/drone';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { MapPin } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { MapPin, Radio } from 'lucide-react';
 
 // Fix for default marker icons
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -16,13 +17,15 @@ L.Icon.Default.mergeOptions({
 
 interface DroneMapProps {
   drones: Drone[];
+  stations: ChargingStation[];
+  stationColors: Record<string, string>;
   flightPaths?: Record<string, Array<[number, number]>>;
   selectedDroneIds?: string[];
   onDroneClick?: (droneId: string) => void;
 }
 
-// Custom icons for different drone statuses
-const createDroneIcon = (status: string, isTracked: boolean = false) => {
+// Custom icons for different drone statuses with station color outline
+const createDroneIcon = (status: string, stationColor: string, isTracked: boolean = false) => {
   const colors = {
     active: '#16a34a',
     charging: '#0891b2',
@@ -33,7 +36,8 @@ const createDroneIcon = (status: string, isTracked: boolean = false) => {
   const color = colors[status as keyof typeof colors] || colors.idle;
   const size = isTracked ? 44 : 32;
   const iconFontSize = isTracked ? 22 : 16;
-  const borderWidth = isTracked ? 4 : 3;
+  const innerBorderWidth = 2;
+  const outerBorderWidth = 3;
 
   return L.divIcon({
     className: 'custom-drone-marker',
@@ -44,8 +48,8 @@ const createDroneIcon = (status: string, isTracked: boolean = false) => {
         height: ${size}px;
         border-radius: 50% 50% 50% 0;
         transform: rotate(-45deg);
-        border: ${borderWidth}px solid white;
-        box-shadow: 0 ${isTracked ? 4 : 2}px ${isTracked ? 12 : 8}px rgba(0,0,0,${isTracked ? 0.4 : 0.3});
+        border: ${innerBorderWidth}px solid white;
+        box-shadow: 0 0 0 ${outerBorderWidth}px ${stationColor}, 0 ${isTracked ? 4 : 2}px ${isTracked ? 12 : 8}px rgba(0,0,0,${isTracked ? 0.4 : 0.3});
         ${isTracked ? 'animation: pulse 2s infinite;' : ''}
       ">
         <div style="
@@ -68,6 +72,43 @@ const createDroneIcon = (status: string, isTracked: boolean = false) => {
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -size],
+  });
+};
+
+// Custom station icon
+const createStationIcon = (stationColor: string, status: string) => {
+  const statusIcons = {
+    available: '✓',
+    charging: '⚡',
+    maintenance: '🔧'
+  };
+
+  const icon = statusIcons[status as keyof typeof statusIcons] || '📍';
+
+  return L.divIcon({
+    className: 'custom-station-marker',
+    html: `
+      <div style="
+        background-color: ${stationColor};
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          color: white;
+          font-size: 20px;
+          font-weight: bold;
+        ">${icon}</div>
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+    popupAnchor: [0, -20],
   });
 };
 
@@ -112,11 +153,20 @@ const calculateFlightStats = (path: Array<[number, number]>) => {
   };
 };
 
-export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDroneClick }: DroneMapProps) => {
+export const DroneMap = ({ 
+  drones, 
+  stations, 
+  stationColors, 
+  flightPaths = {}, 
+  selectedDroneIds = [], 
+  onDroneClick 
+}: DroneMapProps) => {
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylinesRef = useRef<L.Polyline[]>([]);
+  const stationMarkersRef = useRef<L.Marker[]>([]);
+  const [showStations, setShowStations] = useState(true);
 
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -166,14 +216,17 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
       markersRef.current = [];
       polylinesRef.current.forEach(polyline => polyline.remove());
       polylinesRef.current = [];
+      stationMarkersRef.current.forEach(marker => marker.remove());
+      stationMarkersRef.current = [];
 
       // Add markers for each drone
       drones.forEach((drone) => {
         if (!mapRef.current) return;
 
         const isTracked = selectedDroneIds.includes(drone.id);
+        const stationColor = stationColors[drone.station] || '#6b7280';
         const marker = L.marker([drone.location.lat, drone.location.lng], {
-          icon: createDroneIcon(drone.status, isTracked)
+          icon: createDroneIcon(drone.status, stationColor, isTracked)
         }).addTo(mapRef.current);
 
         const statusColors = {
@@ -219,7 +272,16 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
                 <strong style="color: #1f2937;">Farm:</strong> ${drone.farm}
               </p>
               <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">
-                <strong style="color: #1f2937;">Station:</strong> ${drone.station}
+                <strong style="color: #1f2937;">Station:</strong> 
+                <span style="
+                  display: inline-block;
+                  width: 12px;
+                  height: 12px;
+                  border-radius: 50%;
+                  background: ${stationColor};
+                  margin: 0 4px;
+                "></span>
+                ${drone.station}
               </p>
               <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">
                 <strong style="color: #1f2937;">Location:</strong> ${drone.location.lat.toFixed(4)}, ${drone.location.lng.toFixed(4)}
@@ -292,13 +354,7 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
         if (flightPaths[droneId] && flightPaths[droneId].length > 1 && mapRef.current) {
           const path = flightPaths[droneId];
           const drone = drones.find(d => d.id === droneId);
-          const statusColors = {
-            active: '#16a34a',
-            charging: '#0891b2',
-            maintenance: '#dc2626',
-            idle: '#6b7280'
-          };
-          const color = drone ? statusColors[drone.status as keyof typeof statusColors] : '#6b7280';
+          const color = drone ? stationColors[drone.station] : '#3b82f6';
           
           const polyline = L.polyline(path, {
             color: color,
@@ -311,6 +367,52 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
         }
       });
 
+      // Add station markers if showStations is true
+      if (showStations) {
+        stations.forEach((station) => {
+          if (!mapRef.current) return;
+          
+          const color = stationColors[station.id] || '#6b7280';
+          const icon = createStationIcon(color, station.status);
+          
+          const marker = L.marker([station.location.lat, station.location.lng], { icon })
+            .addTo(mapRef.current);
+
+          const assignedDrone = drones.find(d => d.id === station.assignedDrone);
+
+          const popupContent = `
+            <div style="min-width: 200px;">
+              <h3 style="margin: 0 0 8px 0; font-weight: bold; color: ${color};">${station.name}</h3>
+              <div style="margin-bottom: 4px;">
+                <strong>ID:</strong> ${station.id}
+              </div>
+              <div style="margin-bottom: 4px;">
+                <strong>Status:</strong> 
+                <span style="
+                  padding: 2px 6px;
+                  border-radius: 4px;
+                  font-size: 11px;
+                  background: ${station.status === 'available' ? '#16a34a' : station.status === 'charging' ? '#0891b2' : '#dc2626'};
+                  color: white;
+                ">${station.status.toUpperCase()}</span>
+              </div>
+              <div style="margin-bottom: 4px;">
+                <strong>Capacity:</strong> ${station.capacity} drones
+              </div>
+              ${assignedDrone ? `
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                  <strong>Assigned Drone:</strong><br/>
+                  ${assignedDrone.name}
+                </div>
+              ` : ''}
+            </div>
+          `;
+
+          marker.bindPopup(popupContent);
+          stationMarkersRef.current.push(marker);
+        });
+      }
+
       // Fit bounds to show all drones
       if (drones.length > 0) {
         const bounds = L.latLngBounds(
@@ -321,7 +423,7 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
     } catch (error) {
       console.error('Error updating map markers:', error);
     }
-  }, [drones, flightPaths, selectedDroneIds, onDroneClick]);
+  }, [drones, flightPaths, selectedDroneIds, onDroneClick, stations, stationColors, showStations]);
 
   // Set up global click handler for popup buttons
   useEffect(() => {
@@ -339,13 +441,42 @@ export const DroneMap = ({ drones, flightPaths = {}, selectedDroneIds = [], onDr
   return (
     <Card className="border-border overflow-hidden">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MapPin className="h-5 w-5 text-primary" />
-          Live Drone Locations
-          <Badge variant="secondary" className="ml-auto">
-            {drones.length} Tracked
-          </Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            <CardTitle>Live Drone Tracking Map</CardTitle>
+          </div>
+          <Button
+            variant={showStations ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowStations(!showStations)}
+            className="gap-2"
+          >
+            <Radio className="h-4 w-4" />
+            {showStations ? 'Hide' : 'Show'} Stations
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2 mt-4">
+          {Object.entries(stationColors).map(([stationId, color]) => (
+            <Badge 
+              key={stationId} 
+              variant="outline"
+              style={{ borderColor: color, color: color }}
+            >
+              <span 
+                style={{ 
+                  display: 'inline-block',
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: color,
+                  marginRight: '6px'
+                }}
+              />
+              {stationId}
+            </Badge>
+          ))}
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         <div 
