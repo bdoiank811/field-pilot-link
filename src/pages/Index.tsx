@@ -141,7 +141,7 @@ const Index = () => {
     switch (statType) {
       case 'active':
         setActiveTab('drones');
-        setStatusFilter('active');
+        setStatusFilter(prev => prev === 'active' ? null : 'active');
         break;
       case 'battery':
         setActiveTab('drones');
@@ -149,7 +149,7 @@ const Index = () => {
         break;
       case 'charging':
         setActiveTab('drones');
-        setStatusFilter('charging');
+        setStatusFilter(prev => prev === 'charging' ? null : 'charging');
         break;
       case 'issues':
         setActiveTab('alerts');
